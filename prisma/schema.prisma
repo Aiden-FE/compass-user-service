@@ -1,0 +1,13 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator docs {
+  // `npx prisma generate && npx prisma-docs-generator serve` 可查看文档
+  provider = "node node_modules/prisma-docs-generator"
+}
