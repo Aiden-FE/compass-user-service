@@ -13,7 +13,7 @@
   "moduleNameMapper": {
     "@app/common/(.*)": "<rootDir>/../libs/common/src/$1",
     "@app/common": "<rootDir>/../libs/common/src",
-    "@app/prisma/(.*)": "<rootDir>/../libs/prisma/src/$1",
-    "@app/prisma": "<rootDir>/../libs/prisma/src"
+    "@app/mysql/(.*)": "<rootDir>/../libs/mysql/src/$1",
+    "@app/mysql": "<rootDir>/../libs/mysql/src"
   }
 }

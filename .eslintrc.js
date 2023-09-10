@@ -1,6 +1,9 @@
 module.exports = {
   parserOptions: {
-    project: 'tsconfig.json',
+    project: [
+      'tsconfig.json',
+      'tsconfig.*.json'
+    ],
   },
   extends: [
     '@compass-aiden/eslint-config/nest',
@@ -11,9 +14,10 @@ module.exports = {
     node: true,
     jest: true,
   },
-  ignorePatterns: ['.eslintrc.js'],
+  ignorePatterns: ['.eslintrc.js', 'deploy/**/data'],
   rules: {
     'max-classes-per-file': 'off', // dto内会声明多个dto class
     'class-methods-use-this': 'off',
+    'import/no-import-module-exports': 'off',
   },
 };

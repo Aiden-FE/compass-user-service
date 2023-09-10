@@ -2,15 +2,13 @@ import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { initYAMLConfig, getYAMLConfig, VALIDATION_OPTION } from '@app/common';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { PrismaService } from '@app/prisma';
+import { VALIDATION_OPTION } from '@app/common';
 import { AppModule } from './app.module';
 
 declare const module: any;
 
 async function bootstrap() {
-  const config = getYAMLConfig();
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({
@@ -52,12 +50,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, apiDocOptions);
   SwaggerModule.setup('/api/docs', app, document);
 
-  // 配置主数据库时进行连接
-  if (config.env.DATABASE_URL) {
-    const prismaService = app.get(PrismaService);
-    await prismaService.enableShutdownHooks(app);
-  }
-
   await app.startAllMicroservices();
   await app.listen(3001);
   if (module.hot) {
@@ -66,5 +58,4 @@ async function bootstrap() {
   }
 }
 
-initYAMLConfig();
 bootstrap();

@@ -16,13 +16,13 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
-    "prisma": {
+    "mysql": {
       "type": "library",
-      "root": "libs/prisma",
+      "root": "libs/mysql",
       "entryFile": "index",
-      "sourceRoot": "libs/prisma/src",
+      "sourceRoot": "libs/mysql/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/prisma/tsconfig.lib.json"
+        "tsConfigPath": "libs/mysql/tsconfig.lib.json"
       }
     }
   }
