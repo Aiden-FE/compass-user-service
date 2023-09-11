@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { Pool, createPool } from 'mysql';
+import { Pool, createPool } from 'mysql2';
 import { getEnvConfig } from '@app/common';
 
 @Injectable()
