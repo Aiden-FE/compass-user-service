@@ -47,6 +47,10 @@ const schema = {
       type: 'string',
       default: 10,
     },
+    MYSQL_DEBUG: {
+      type: 'boolean',
+      default: false,
+    },
   },
 };
 

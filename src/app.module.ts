@@ -6,6 +6,7 @@ import { MysqlModule } from '@app/mysql';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
+import { PermissionModule } from './permission/permission.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UserModule } from './user/user.module';
     ]),
     MysqlModule,
     UserModule,
+    PermissionModule,
   ],
   controllers: [AppController],
   providers: [

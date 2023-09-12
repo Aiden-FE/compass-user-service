@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { Pool, createPool } from 'mysql2';
+import { Pool, createPool } from 'mysql2/promise';
 import { getEnvConfig } from '@app/common';
 
 @Injectable()
@@ -17,6 +17,7 @@ export class MysqlService implements OnModuleInit, OnModuleDestroy {
         password,
         database,
         connectionLimit: getEnvConfig('MYSQL_CONNECTION_LIMIT'),
+        debug: getEnvConfig('MYSQL_DEBUG'),
       });
       Logger.log('Connected to MySQL database successfully', 'MySQL');
     }
@@ -24,8 +25,12 @@ export class MysqlService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleDestroy() {
     if (this.mainPool) {
-      this.mainPool.end();
-      Logger.log('Disconnected MySQL database successfully', 'MySQL');
+      try {
+        await this.mainPool.end();
+        Logger.log('Disconnected MySQL database successfully', 'MySQL');
+      } catch (e) {
+        Logger.warn(e);
+      }
     }
   }
 }

@@ -36,6 +36,11 @@ export interface EnvironmentVariablesDto {
    * @default 10
    */
   MYSQL_CONNECTION_LIMIT?: number;
+  /**
+   * sql 调试模式
+   * @default false
+   */
+  MYSQL_DEBUG?: boolean;
 }
 
 export type EnvironmentVariables = Required<EnvironmentVariablesDto>;
