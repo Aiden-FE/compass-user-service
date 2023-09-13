@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MysqlModule, MysqlService } from '@app/mysql';
 import { isNumber } from 'lodash';
-import { PaginationReply } from '@app/common';
+import { getEnvConfig, PaginationReply } from '@app/common';
 import { PermissionService } from './permission.service';
 
 describe('PermissionService', () => {
@@ -11,7 +11,16 @@ describe('PermissionService', () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [MysqlModule],
+      imports: [
+        MysqlModule.forRoot({
+          host: getEnvConfig('MYSQL_HOST'),
+          user: getEnvConfig('MYSQL_USER'),
+          password: getEnvConfig('MYSQL_PASSWORD'),
+          database: getEnvConfig('MYSQL_DATABASE'),
+          connectionLimit: getEnvConfig('MYSQL_CONNECTION_LIMIT'),
+          debug: getEnvConfig('MYSQL_DEBUG'),
+        }),
+      ],
       providers: [PermissionService],
     }).compile();
 

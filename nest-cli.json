@@ -24,6 +24,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/mysql/tsconfig.lib.json"
       }
+    },
+    "google-recaptcha": {
+      "type": "library",
+      "root": "libs/google-recaptcha",
+      "entryFile": "index",
+      "sourceRoot": "libs/google-recaptcha/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/google-recaptcha/tsconfig.lib.json"
+      }
     }
   }
 }

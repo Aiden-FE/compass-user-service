@@ -1,24 +1,15 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { Pool, createPool } from 'mysql2/promise';
-import { getEnvConfig } from '@app/common';
+import { Pool, createPool, PoolOptions } from 'mysql2/promise';
 
 @Injectable()
 export class MysqlService implements OnModuleInit, OnModuleDestroy {
   public mainPool: Pool;
 
+  constructor(private options: PoolOptions) {}
+
   async onModuleInit() {
-    const user = getEnvConfig('MYSQL_USER');
-    const password = getEnvConfig('MYSQL_PASSWORD');
-    const database = getEnvConfig('MYSQL_DATABASE');
-    if (user && password && database) {
-      this.mainPool = createPool({
-        host: getEnvConfig('MYSQL_HOST'),
-        user,
-        password,
-        database,
-        connectionLimit: getEnvConfig('MYSQL_CONNECTION_LIMIT'),
-        debug: getEnvConfig('MYSQL_DEBUG'),
-      });
+    if (this.options?.user && this.options.password && this.options.database) {
+      this.mainPool = createPool(this.options);
       Logger.log('Connected to MySQL database successfully', 'MySQL');
     }
   }

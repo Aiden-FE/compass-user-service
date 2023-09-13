@@ -14,6 +14,8 @@
     "@app/common/(.*)": "<rootDir>/../libs/common/src/$1",
     "@app/common": "<rootDir>/../libs/common/src",
     "@app/mysql/(.*)": "<rootDir>/../libs/mysql/src/$1",
-    "@app/mysql": "<rootDir>/../libs/mysql/src"
+    "@app/mysql": "<rootDir>/../libs/mysql/src",
+    "@app/google-recaptcha/(.*)": "<rootDir>/../libs/google-recaptcha/src/$1",
+    "@app/google-recaptcha": "<rootDir>/../libs/google-recaptcha/src"
   }
 }

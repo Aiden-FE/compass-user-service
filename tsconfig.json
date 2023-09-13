@@ -30,6 +30,12 @@
       ],
       "@app/mysql/*": [
         "libs/mysql/src/*"
+      ],
+      "@app/google-recaptcha": [
+        "libs/google-recaptcha/src"
+      ],
+      "@app/google-recaptcha/*": [
+        "libs/google-recaptcha/src/*"
       ]
     }
   },
