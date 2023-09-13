@@ -34,6 +34,7 @@
     "fastify": "^4.22.2",
     "lodash": "^4.17.21",
     "mysql2": "^3.6.1",
+    "nodemailer": "^6.9.5",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1"
   },
@@ -47,6 +48,7 @@
     "@types/lodash": "^4.14.198",
     "@types/mysql": "^2.15.21",
     "@types/node": "^20.3.1",
+    "@types/nodemailer": "^6.4.10",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
@@ -88,7 +90,8 @@
     "moduleNameMapper": {
       "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1",
       "^@app/mysql(|/.*)$": "<rootDir>/libs/mysql/src/$1",
-      "^@app/google-recaptcha(|/.*)$": "<rootDir>/libs/google-recaptcha/src/$1"
+      "^@app/google-recaptcha(|/.*)$": "<rootDir>/libs/google-recaptcha/src/$1",
+      "^@app/email(|/.*)$": "<rootDir>/libs/email/src/$1"
     }
   }
 }

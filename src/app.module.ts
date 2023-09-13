@@ -7,6 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { PermissionModule } from './permission/permission.module';
+import { OauthModule } from './oauth/oauth.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { PermissionModule } from './permission/permission.module';
     }),
     UserModule,
     PermissionModule,
+    OauthModule,
   ],
   controllers: [AppController],
   providers: [

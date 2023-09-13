@@ -36,6 +36,12 @@
       ],
       "@app/google-recaptcha/*": [
         "libs/google-recaptcha/src/*"
+      ],
+      "@app/email": [
+        "libs/email/src"
+      ],
+      "@app/email/*": [
+        "libs/email/src/*"
       ]
     }
   },
