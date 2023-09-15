@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@liaoliaots/nestjs-redis": "^9.0.5",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/mapped-types": "*",
@@ -32,8 +33,11 @@
     "class-validator": "^0.14.0",
     "dotenv": "^16.3.1",
     "fastify": "^4.22.2",
+    "ioredis": "^5.3.2",
     "lodash": "^4.17.21",
     "mysql2": "^3.6.1",
+    "nanoid": "^3.3.6",
+    "node-forge": "^1.3.1",
     "nodemailer": "^6.9.5",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1"
@@ -48,6 +52,7 @@
     "@types/lodash": "^4.14.198",
     "@types/mysql": "^2.15.21",
     "@types/node": "^20.3.1",
+    "@types/node-forge": "^1.3.5",
     "@types/nodemailer": "^6.4.10",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
@@ -91,7 +96,8 @@
       "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1",
       "^@app/mysql(|/.*)$": "<rootDir>/libs/mysql/src/$1",
       "^@app/google-recaptcha(|/.*)$": "<rootDir>/libs/google-recaptcha/src/$1",
-      "^@app/email(|/.*)$": "<rootDir>/libs/email/src/$1"
+      "^@app/email(|/.*)$": "<rootDir>/libs/email/src/$1",
+      "^@app/redis(|/.*)$": "<rootDir>/libs/redis/src/$1"
     }
   }
 }

@@ -1,4 +1,4 @@
-import { cloneDeep, get } from 'lodash';
+import { cloneDeep, get, merge } from 'lodash';
 import { EnvironmentVariables } from '@app/common/interfaces';
 import Ajv from 'ajv';
 import { parse as dotenvParse } from 'dotenv';
@@ -27,6 +27,10 @@ const schema = {
       type: 'integer',
       default: 60,
     },
+    APP_HMAC_SECRET: {
+      type: 'string',
+      default: 'example',
+    },
     APP_MYSQL_HOST: {
       type: 'string',
       nullable: true,
@@ -50,6 +54,18 @@ const schema = {
     MYSQL_DEBUG: {
       type: 'boolean',
       default: false,
+    },
+    EMAIL_SERVICE: {
+      type: 'string',
+      nullable: true,
+    },
+    EMAIL_AUTH_USER: {
+      type: 'string',
+      nullable: true,
+    },
+    EMAIL_AUTH_PASS: {
+      type: 'string',
+      nullable: true,
     },
   },
 };
@@ -76,7 +92,7 @@ function initEnvConfig() {
     return;
   }
 
-  config = data as unknown as EnvironmentVariables;
+  config = merge({}, process.env, data);
   isInit = true;
 }
 

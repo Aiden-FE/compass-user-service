@@ -18,6 +18,8 @@
     "@app/google-recaptcha/(.*)": "<rootDir>/../libs/google-recaptcha/src/$1",
     "@app/google-recaptcha": "<rootDir>/../libs/google-recaptcha/src",
     "@app/email/(.*)": "<rootDir>/../libs/email/src/$1",
-    "@app/email": "<rootDir>/../libs/email/src"
+    "@app/email": "<rootDir>/../libs/email/src",
+    "@app/redis/(.*)": "<rootDir>/../libs/redis/src/$1",
+    "@app/redis": "<rootDir>/../libs/redis/src"
   }
 }

@@ -1,13 +1,41 @@
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { getEnvConfig } from '@app/common';
 import { APP_GUARD } from '@nestjs/core';
 import { MysqlModule } from '@app/mysql';
+import { EmailModule } from '@app/email';
+import SMTPTransport from 'nodemailer/lib/smtp-transport';
+import { RedisModule } from '@app/redis';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { PermissionModule } from './permission/permission.module';
 import { OauthModule } from './oauth/oauth.module';
+import { SYSTEM_EMAIL_DISPLAY_ACCOUNT } from './common';
+
+const dynamicModules: DynamicModule[] = [];
+
+const emailService = getEnvConfig('EMAIL_SERVICE');
+const emailAuthUser = getEnvConfig('EMAIL_AUTH_USER');
+const emailAuthPass = getEnvConfig('EMAIL_AUTH_PASS');
+const redisConnectionUrl = getEnvConfig('REDIS_CONNECTION_URL');
+
+if (emailService && emailAuthUser && emailAuthPass) {
+  dynamicModules.push(
+    EmailModule.forRoot({
+      service: emailService,
+      auth: {
+        user: emailAuthUser,
+        pass: emailAuthPass,
+      },
+      from: SYSTEM_EMAIL_DISPLAY_ACCOUNT,
+    } as SMTPTransport.Options),
+  );
+}
+
+if (redisConnectionUrl) {
+  dynamicModules.push(RedisModule.forRoot(redisConnectionUrl));
+}
 
 @Module({
   imports: [
@@ -28,6 +56,7 @@ import { OauthModule } from './oauth/oauth.module';
       connectionLimit: getEnvConfig('MYSQL_CONNECTION_LIMIT'),
       debug: getEnvConfig('MYSQL_DEBUG'),
     }),
+    ...dynamicModules,
     UserModule,
     PermissionModule,
     OauthModule,

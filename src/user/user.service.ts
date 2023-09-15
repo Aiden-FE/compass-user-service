@@ -1,28 +1,106 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { RedisService } from '@app/redis';
+import { BusinessStatus, encodeHMAC, generateUUID, HttpResponse, PaginationReply } from '@app/common';
+import { MysqlService } from '@app/mysql';
+import { CreateUserByEmailDto, CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { REDIS_KEYS } from '../common';
+import { QueryUsersDto } from './user.dto';
 
 @Injectable()
 export class UserService {
-  createByEmail() {}
+  constructor(
+    private redisService: RedisService,
+    private mysqlService: MysqlService,
+  ) {}
+
+  async createByEmail(params: CreateUserByEmailDto) {
+    const captcha = await this.redisService.get(REDIS_KEYS.CAPTCHA, {
+      params: { type: 'email', account: params.email },
+    });
+    if (!captcha) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.PRECONDITION_REQUIRED,
+        message: '请先获取验证码',
+      });
+    }
+    if (Number(captcha) !== params.captcha) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.PRECONDITION_FAILED,
+        message: '验证码错误',
+      });
+    }
+    const [userEmail] = await this.mysqlService.mainPool.query(
+      `SELECT * FROM \`users\` WHERE 'email' = ?`,
+      params.email,
+    );
+
+    if ((userEmail as any[])?.length) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.ER_DUP_ENTRY,
+        message: '该邮箱用户已存在',
+      });
+    }
+    // 验证通过需要创建账户
+    const [result] = await this.mysqlService.mainPool.query(
+      `INSERT INTO \`users\` (\`uid\`, \`email\`, \`password\`) VALUES (?, ?, ?)`,
+      [generateUUID(), params.email, encodeHMAC(params.password)],
+    );
+    return new HttpResponse({
+      message: '用户创建成功',
+      data: (result as any).insertId,
+    });
+  }
 
   create(createUserDto: CreateUserDto) {
     return `This action adds a new user ${JSON.stringify(createUserDto)}`;
   }
 
-  findAll() {
-    return `This action returns all user`;
+  async findAll(queryUsersDto: QueryUsersDto) {
+    const whereSql = queryUsersDto.name ? `WHERE \`name\` LIKE '%${queryUsersDto.name}%' ` : '';
+    const subSql = `(SELECT COUNT(*) FROM \`users\` ${whereSql}) as total`;
+    const sql = `SELECT \`id\`, \`uid\`, \`name\`, \`nickname\`, \`gender\`, \`birthday\`, ${subSql} FROM \`users\` ${whereSql}LIMIT ? OFFSET ?`;
+    const [result] = await this.mysqlService.mainPool.query(sql, [
+      queryUsersDto.pageSize,
+      queryUsersDto.pageNum * queryUsersDto.pageSize,
+    ]);
+    return new PaginationReply({
+      pageNum: queryUsersDto.pageNum,
+      pageSize: queryUsersDto.pageSize,
+      list: (result as any[]).map((item) => {
+        const data = { ...item };
+        delete data.total;
+        return data;
+      }),
+      total: result?.[0]?.total || 0,
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number) {
+    const [result] = await this.mysqlService.mainPool.query(
+      'SELECT `id`, `uid`, `email`, `name`, `nickname`, `gender`, `birthday` FROM `users` WHERE `id` = ? AND `enabled` = true',
+      id,
+    );
+    return result?.[0] || null;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user ${JSON.stringify(updateUserDto)}`;
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    let sql = 'UPDATE `users` SET';
+    const values: unknown[] = [];
+    Object.keys(updateUserDto).forEach((key) => {
+      if (key === 'id') return;
+      sql += ` \`${key}\` = ?,`;
+      values.push(updateUserDto[key]);
+    });
+    sql = sql.slice(0, -1);
+    sql += ' WHERE id = ?';
+    values.push(id);
+    await this.mysqlService.mainPool.query(sql, values);
+    return true;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: number) {
+    await this.mysqlService.mainPool.query('DELETE FROM `users` WHERE `id` = ?', id);
+    return true;
   }
 }

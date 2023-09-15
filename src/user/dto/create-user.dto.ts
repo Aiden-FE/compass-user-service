@@ -1,4 +1,4 @@
-import {IsEmail, IsString, Max, MaxLength, Min, MinLength} from "class-validator";
+import { IsEmail, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 export class CreateUserDto {
   telephone?: string;
@@ -11,9 +11,9 @@ export class CreateUserDto {
 
   nickname?: string;
 
-  gender?: string;
+  gender?: number;
 
-  birthday?: string;
+  birthday?: string | number | Date;
 }
 
 export class CreateUserByEmailDto {
