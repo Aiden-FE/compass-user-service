@@ -12,6 +12,7 @@ import { UserModule } from './user/user.module';
 import { PermissionModule } from './permission/permission.module';
 import { OauthModule } from './oauth/oauth.module';
 import { SYSTEM_EMAIL_DISPLAY_ACCOUNT } from './common';
+import { RoleModule } from './role/role.module';
 
 const dynamicModules: DynamicModule[] = [];
 
@@ -60,6 +61,7 @@ if (redisConnectionUrl) {
     UserModule,
     PermissionModule,
     OauthModule,
+    RoleModule,
   ],
   controllers: [AppController],
   providers: [

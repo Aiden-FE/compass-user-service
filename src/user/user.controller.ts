@@ -15,7 +15,10 @@ export class UserController {
 
   @MessagePattern('findAllUser')
   findAll() {
-    return this.userService.findAll();
+    return this.userService.findAll({
+      pageNum: 0,
+      pageSize: 20,
+    });
   }
 
   @MessagePattern('findOneUser')
