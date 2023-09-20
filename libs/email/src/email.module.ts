@@ -9,6 +9,7 @@ export class EmailModule {
     mailOption?: Parameters<typeof createTransport>[1],
   ): DynamicModule {
     return {
+      global: true,
       module: EmailModule,
       providers: [
         {

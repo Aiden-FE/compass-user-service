@@ -13,7 +13,10 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
-  @MessagePattern('findAllUser')
+  @MessagePattern({
+    method: 'GET',
+    url: '/users',
+  })
   findAll() {
     return this.userService.findAll({
       pageNum: 0,

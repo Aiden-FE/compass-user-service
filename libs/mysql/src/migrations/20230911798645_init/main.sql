@@ -96,6 +96,7 @@ CREATE TABLE `roles`
 (
     `id`          INTEGER      NOT NULL AUTO_INCREMENT,
     `name`        VARCHAR(24)  NOT NULL COMMENT '角色名称',
+    `is_system`   BOOLEAN      NOT NULL DEFAULT false COMMENT '是否为系统角色',
     `description` VARCHAR(255) NULL COMMENT '角色详细描述',
     `created_at`  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at`  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
@@ -158,12 +159,12 @@ VALUES ('permissions_create', '创建权限', NULL),
        ('users_update', '修改用户', NULL),
        ('users_query', '查询用户', NULL);
 
-INSERT INTO `roles` (name, description) VALUES ('administrator', '管理员');
+INSERT INTO `roles` (name, is_system, description) VALUES ('administrator', true, '管理员');
 
-INSERT INTO `users` (uid, password, email) VALUES ('29dfgb35-2hac-hehe-8309-fa232f687eb0', 'fa232f0d7eb0', 'admin@example.com');
+INSERT INTO `users` (uid, password, email) VALUES ('29dfgb35-2hac-hehe-8309-fa232f687eb0', 'fa232f0d7eb0', 'admin@system.com');
 
 INSERT INTO `_permissions_to_roles` (`A`, `B`) SELECT p.id, r.id FROM permissions p, roles r WHERE r.name = 'administrator';
-INSERT INTO `_roles_to_users` (`A`, `B`) SELECT r.id, u.id FROM roles r, users u WHERE r.name = 'administrator' AND u.email = 'admin@example.com';
+INSERT INTO `_roles_to_users` (`A`, `B`) SELECT r.id, u.id FROM roles r, users u WHERE r.name = 'administrator' AND u.email = 'admin@system.com';
 
 # DROP TRIGGER IF EXISTS generate_user_uid_trigger;
 -- 通过触发器自动生成uid 使用应用程序来保障此逻辑而不是触发器

@@ -14,9 +14,15 @@ export class PermissionController {
     return this.permissionService.create(createPermissionDto);
   }
 
-  @MessagePattern('findAllPermission')
-  findAll(@Payload() findPermissionDto: QueryPermissionDto) {
-    return this.permissionService.findAll(findPermissionDto);
+  @MessagePattern({
+    method: 'GET',
+    url: '/permissions',
+  })
+  findAll() {
+    return this.permissionService.findAll({
+      pageNum: 0,
+      pageSize: 20,
+    });
   }
 
   @MessagePattern('findOnePermission')

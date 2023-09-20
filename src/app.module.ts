@@ -1,7 +1,5 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { getEnvConfig } from '@app/common';
-import { APP_GUARD } from '@nestjs/core';
 import { MysqlModule } from '@app/mysql';
 import { EmailModule } from '@app/email';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
@@ -41,14 +39,14 @@ if (redisConnectionUrl) {
 @Module({
   imports: [
     // 局部可以通过 SkipThrottle Throttle 跳过或覆盖全局配置
-    ThrottlerModule.forRoot([
-      {
-        // 单位毫秒
-        ttl: getEnvConfig('APP_THROTTLE_TTL'),
-        // 单位时间内限制的次数
-        limit: getEnvConfig('APP_THROTTLE_LIMIT'),
-      },
-    ]),
+    // ThrottlerModule.forRoot([
+    //   {
+    //     // 单位毫秒
+    //     ttl: getEnvConfig('APP_THROTTLE_TTL'),
+    //     // 单位时间内限制的次数
+    //     limit: getEnvConfig('APP_THROTTLE_LIMIT'),
+    //   },
+    // ]),
     MysqlModule.forRoot({
       host: getEnvConfig('MYSQL_HOST'),
       user: getEnvConfig('MYSQL_USER'),
@@ -66,10 +64,10 @@ if (redisConnectionUrl) {
   controllers: [AppController],
   providers: [
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: ThrottlerGuard,
+    // },
   ],
 })
 export class AppModule {}

@@ -13,7 +13,10 @@ export class RoleController {
     return this.roleService.create(createRoleDto);
   }
 
-  @MessagePattern('findAllRole')
+  @MessagePattern({
+    method: 'GET',
+    url: '/roles',
+  })
   findAll() {
     return this.roleService.findAll({
       pageNum: 0,
