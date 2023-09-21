@@ -102,6 +102,13 @@ export interface HttpResponseOption<Data = unknown> extends BusinessResponse<Dat
   httpStatus: HttpStatus;
 }
 
+export interface MicroServicesResponse {
+  /** 响应内容 */
+  response: unknown;
+  /** 响应状态,默认OK */
+  httpStatus?: HttpStatus;
+}
+
 export class HttpResponse<Data = unknown> {
   private readonly option: HttpResponseOption<Data>;
 
@@ -141,5 +148,12 @@ export class HttpResponse<Data = unknown> {
           details: this.option.details,
         } as BusinessResponse;
     }
+  }
+
+  getMicroServiceResponse(): MicroServicesResponse {
+    return {
+      httpStatus: this.getHttpStatus(),
+      response: this.getResponse(),
+    };
   }
 }

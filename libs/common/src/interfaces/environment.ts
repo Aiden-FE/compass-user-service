@@ -22,6 +22,12 @@ export interface EnvironmentVariablesDto {
    */
   APP_HMAC_SECRET?: string;
   /**
+   * JWT 授权密钥
+   * 生产环境强烈建议设置一个随机字符串,不要使用默认值
+   * @default example
+   */
+  APP_JWT_SECRET?: string;
+  /**
    * mysql 要连接的数据库的主机名
    * @default 本地主机
    */
@@ -69,5 +75,6 @@ export type EnvironmentVariables = EnvironmentVariablesDto &
       | 'MYSQL_CONNECTION_LIMIT'
       | 'MYSQL_DEBUG'
       | 'APP_HMAC_SECRET'
+      | 'APP_JWT_SECRET'
     >
   >;

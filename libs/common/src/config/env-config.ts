@@ -67,6 +67,10 @@ const schema = {
       type: 'string',
       nullable: true,
     },
+    APP_JWT_SECRET: {
+      type: 'string',
+      default: 'example',
+    },
   },
 };
 

@@ -3,7 +3,6 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { PermissionService } from './permission.service';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
-import { QueryPermissionDto } from './dto/query-permission.dto';
 
 @Controller()
 export class PermissionController {
