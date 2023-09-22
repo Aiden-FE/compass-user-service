@@ -6,16 +6,6 @@ export interface EnvironmentVariablesDto {
    */
   NODE_ENV?: 'development' | 'production';
   /**
-   * API节流间隔 毫秒单位
-   * @default 60000
-   */
-  APP_THROTTLE_TTL?: number;
-  /**
-   * 节流间隔内的限制次数
-   * @default 60
-   */
-  APP_THROTTLE_LIMIT?: number;
-  /**
    * HMAC 密钥串,内部不可逆加密隐私数据时使用.
    * 生产环境强烈建议设置一个随机字符串,不要使用默认值,
    * @default example
@@ -27,6 +17,21 @@ export interface EnvironmentVariablesDto {
    * @default example
    */
   APP_JWT_SECRET?: string;
+  /**
+   * 谷歌人机校验密钥, 不设置相关校验接口会异常
+   * @default example
+   */
+  APP_GOOGLE_RECAPTCHA_SECRET?: string;
+  /**
+   * API节流间隔 毫秒单位
+   * @default 60000
+   */
+  APP_THROTTLE_TTL?: number;
+  /**
+   * 节流间隔内的限制次数
+   * @default 60
+   */
+  APP_THROTTLE_LIMIT?: number;
   /**
    * mysql 要连接的数据库的主机名
    * @default 本地主机
@@ -76,5 +81,6 @@ export type EnvironmentVariables = EnvironmentVariablesDto &
       | 'MYSQL_DEBUG'
       | 'APP_HMAC_SECRET'
       | 'APP_JWT_SECRET'
+      | 'APP_GOOGLE_RECAPTCHA_SECRET'
     >
   >;

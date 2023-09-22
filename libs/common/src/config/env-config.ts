@@ -71,6 +71,10 @@ const schema = {
       type: 'string',
       default: 'example',
     },
+    APP_GOOGLE_RECAPTCHA_SECRET: {
+      type: 'string',
+      default: 'example',
+    },
   },
 };
 

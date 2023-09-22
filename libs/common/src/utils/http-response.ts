@@ -88,6 +88,8 @@ export enum BusinessStatus {
   // 101XXX 自行定义的状态码
   /** unique值重复 */
   ER_DUP_ENTRY = 101001,
+  /** redis 写入异常 */
+  ER_REDIS_WRITE,
 }
 
 export interface BusinessResponse<Data = unknown> {

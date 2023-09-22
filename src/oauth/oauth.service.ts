@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { getEnvConfig, replaceVariablesInString } from '@app/common';
+import { BusinessStatus, getEnvConfig, HttpResponse, replaceVariablesInString } from '@app/common';
 import { GoogleRecaptchaService } from '@app/google-recaptcha';
 import { EmailService } from '@app/email';
 import { random } from 'lodash';
@@ -8,6 +8,8 @@ import { CreateOauthDto } from './dto/create-oauth.dto';
 import { UpdateOauthDto } from './dto/update-oauth.dto';
 import { OAuthEmailCaptchaDto } from './oauth.dto';
 import { EMAIL_CAPTCHA_TEMPLATE, REDIS_KEYS, SYSTEM_EMAIL_DISPLAY_ACCOUNT } from '../common';
+import { CreateUserByEmailDto } from '../user/dto/create-user.dto';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class OauthService {
@@ -15,9 +17,11 @@ export class OauthService {
     private grService: GoogleRecaptchaService,
     private emailService: EmailService,
     private redisService: RedisService,
+    private userService: UserService,
   ) {}
 
-  async sendEmailCaptcha(params: OAuthEmailCaptchaDto) {
+  /** 发送邮箱验证码 */
+  async sendEmailCaptcha(params: OAuthEmailCaptchaDto, ip?: string) {
     const data = {
       type: 'email',
       account: params.email,
@@ -27,7 +31,10 @@ export class OauthService {
     });
     if (hasLock === 'true') {
       Logger.log(`邮箱${data.account}已发送过邮件,3分钟内不允许重复发送`);
-      return false;
+      return new HttpResponse({
+        statusCode: BusinessStatus.TOO_MANY_REQUESTS,
+        message: '已发送过邮件,最少3分钟内不允许重复发送',
+      });
     }
     let valid: boolean;
     if (getEnvConfig('NODE_ENV') === 'development') {
@@ -36,22 +43,37 @@ export class OauthService {
       valid = await this.grService.verifyRecaptcha({
         score: 0.9, // 登录需要较高准确度,避免被恶意刷邮件
         response: params.recaptcha,
+        remoteip: ip,
       });
     }
     if (!valid) {
       Logger.log(`Google recaptcha 验证失败: ${params.recaptcha}`);
-      return false;
+      return new HttpResponse({
+        statusCode: BusinessStatus.FORBIDDEN,
+        message: '人机验证不通过',
+      });
     }
     const code = random(100000, 999999);
-    await this.emailService.sendEmail({
-      from: SYSTEM_EMAIL_DISPLAY_ACCOUNT,
-      to: params.email,
-      subject: 'Compass 邮件验证',
-      html: replaceVariablesInString(EMAIL_CAPTCHA_TEMPLATE, {
-        context: 'Compass',
-        code: code.toString(),
-      }),
-    });
+    if (getEnvConfig('NODE_ENV') === 'production') {
+      try {
+        await this.emailService.sendEmail({
+          from: SYSTEM_EMAIL_DISPLAY_ACCOUNT,
+          to: params.email,
+          subject: 'Compass 邮件验证',
+          html: replaceVariablesInString(EMAIL_CAPTCHA_TEMPLATE, {
+            context: 'Compass',
+            code: code.toString(),
+          }),
+        });
+      } catch (e) {
+        return new HttpResponse({
+          statusCode: BusinessStatus.INTERNAL_SERVER_ERROR,
+          message: e.toString(),
+        });
+      }
+    } else {
+      Logger.log(`已生成邮箱验证码: ${code}`);
+    }
     return Promise.all([
       // 将code存入redis缓存
       this.redisService.set(REDIS_KEYS.CAPTCHA, code, {
@@ -63,12 +85,31 @@ export class OauthService {
         expiresIn: 1000 * 60 * 3,
       }),
     ])
-      .then(() => true)
+      .then(
+        () =>
+          new HttpResponse({
+            message: '验证通过',
+          }),
+      )
       .catch((e) => {
         Logger.error(e);
-        return false;
+        return new HttpResponse({
+          statusCode: BusinessStatus.ER_REDIS_WRITE,
+          message: '服务器内部异常',
+        });
       });
   }
+
+  /** 创建邮箱账号 */
+  async createEmailAccount(params: CreateUserByEmailDto) {
+    const resp = await this.userService.createByEmail(params);
+    if (resp.getStatusCode() === BusinessStatus.OK) {
+      return this.userService.findOne(resp.getResponse().data);
+    }
+    return resp;
+  }
+
+  async createUserToken() {}
 
   create(createOauthDto: CreateOauthDto) {
     return 'This action adds a new oauth';
