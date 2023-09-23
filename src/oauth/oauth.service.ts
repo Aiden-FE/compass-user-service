@@ -109,8 +109,11 @@ export class OauthService {
     return resp;
   }
 
-  async createUserToken() {}
+  async createUserToken() {
+    //
+  }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   create(createOauthDto: CreateOauthDto) {
     return 'This action adds a new oauth';
   }
@@ -123,6 +126,7 @@ export class OauthService {
     return `This action returns a #${id} oauth`;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   update(id: number, updateOauthDto: UpdateOauthDto) {
     return `This action updates a #${id} oauth`;
   }

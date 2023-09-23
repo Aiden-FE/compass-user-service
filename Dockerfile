@@ -5,7 +5,7 @@ ENV NODE_ENV production
 
 ARG WORKDIR_DIR=/root/compass-service
 
-ARG EXPOSE=3000
+ARG EXPOSE=3001
 
 WORKDIR ${WORKDIR_DIR}
 

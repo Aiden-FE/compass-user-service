@@ -19,12 +19,16 @@ async function main() {
     multipleStatements: true, // 允许多语句,以便读取sql文件执行
   });
 
-  const [result] = await connection.query(`SELECT id, version as v FROM migrations WHERE version = '0.0.1' LIMIT 1`);
+  try {
+    const [result] = await connection.query(`SELECT id, version as v FROM migrations WHERE version = '0.0.1' LIMIT 1`);
 
-  if (result[0]) {
-    await connection.end();
-    Logger.log('已执行过0.0.1的迁移任务');
-    return;
+    if (result[0]) {
+      await connection.end();
+      Logger.log('已执行过0.0.1的迁移任务');
+      return;
+    }
+  } catch (e) {
+    Logger.log(e);
   }
 
   await connection.query(readFileSync(join(__dirname, './main.sql'), { encoding: 'utf-8' }));

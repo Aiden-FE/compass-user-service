@@ -1,5 +1,13 @@
 // .env 可用环境变量
 export interface EnvironmentVariablesDto {
+  /** Redis连接地址 */
+  REDIS_CONNECTION_URL: string;
+  /** 邮件服务类目 */
+  EMAIL_SERVICE: string;
+  /** 邮件授权用户 */
+  EMAIL_AUTH_USER: string;
+  /** 邮件授权用户密码 */
+  EMAIL_AUTH_PASS: string;
   /**
    * 环境变量
    * @default process.env.NODE_ENV | 'production'
@@ -59,14 +67,6 @@ export interface EnvironmentVariablesDto {
    * @default false
    */
   MYSQL_DEBUG?: boolean;
-  /** 邮件服务类目 (不提供则不启用邮件模块,影响相关功能) */
-  EMAIL_SERVICE?: string;
-  /** 邮件授权用户 (不提供则不启用邮件模块,影响相关功能) */
-  EMAIL_AUTH_USER?: string;
-  /** 邮件授权用户密码 (不提供则不启用邮件模块,影响相关功能) */
-  EMAIL_AUTH_PASS?: string;
-  /** Redis连接地址 (不提供则不启用Redis模块,影响相关功能) */
-  REDIS_CONNECTION_URL?: string;
 }
 
 // 与默认值合并后的环境变量声明
