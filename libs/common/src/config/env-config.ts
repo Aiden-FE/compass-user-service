@@ -19,14 +19,6 @@ const schema = {
       type: 'string',
       default: process.env.NODE_ENV || 'production',
     },
-    APP_THROTTLE_TTL: {
-      type: 'integer',
-      default: 1000 * 60,
-    },
-    APP_THROTTLE_LIMIT: {
-      type: 'integer',
-      default: 60,
-    },
     APP_HMAC_SECRET: {
       type: 'string',
       default: 'example',
@@ -74,6 +66,18 @@ const schema = {
     APP_GOOGLE_RECAPTCHA_SECRET: {
       type: 'string',
       default: 'example',
+    },
+    REDIS_HOST: {
+      type: 'string',
+      nullable: true,
+    },
+    REDIS_PORT: {
+      type: 'number',
+      nullable: true,
+    },
+    REDIS_PASSWORD: {
+      type: 'string',
+      nullable: true,
     },
   },
 };

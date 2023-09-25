@@ -1,7 +1,5 @@
 // .env 可用环境变量
 export interface EnvironmentVariablesDto {
-  /** Redis连接地址 */
-  REDIS_CONNECTION_URL: string;
   /** 邮件服务类目 */
   EMAIL_SERVICE: string;
   /** 邮件授权用户 */
@@ -31,16 +29,6 @@ export interface EnvironmentVariablesDto {
    */
   APP_GOOGLE_RECAPTCHA_SECRET?: string;
   /**
-   * API节流间隔 毫秒单位
-   * @default 60000
-   */
-  APP_THROTTLE_TTL?: number;
-  /**
-   * 节流间隔内的限制次数
-   * @default 60
-   */
-  APP_THROTTLE_LIMIT?: number;
-  /**
    * mysql 要连接的数据库的主机名
    * @default 本地主机
    */
@@ -67,6 +55,18 @@ export interface EnvironmentVariablesDto {
    * @default false
    */
   MYSQL_DEBUG?: boolean;
+  /**
+   * redis主机地址
+   * @default 本地主机
+   */
+  REDIS_HOST?: string;
+  /**
+   * redis端口
+   * @default 6379
+   */
+  REDIS_PORT?: number;
+  /** redis密码 */
+  REDIS_PASSWORD?: string;
 }
 
 // 与默认值合并后的环境变量声明
@@ -75,8 +75,6 @@ export type EnvironmentVariables = EnvironmentVariablesDto &
     Pick<
       EnvironmentVariablesDto,
       | 'NODE_ENV'
-      | 'APP_THROTTLE_TTL'
-      | 'APP_THROTTLE_LIMIT'
       | 'MYSQL_CONNECTION_LIMIT'
       | 'MYSQL_DEBUG'
       | 'APP_HMAC_SECRET'

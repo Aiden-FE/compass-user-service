@@ -19,7 +19,6 @@ const dynamicModules: DynamicModule[] = [];
 const emailService = getEnvConfig('EMAIL_SERVICE');
 const emailAuthUser = getEnvConfig('EMAIL_AUTH_USER');
 const emailAuthPass = getEnvConfig('EMAIL_AUTH_PASS');
-const redisConnectionUrl = getEnvConfig('REDIS_CONNECTION_URL');
 
 if (emailService && emailAuthUser && emailAuthPass) {
   dynamicModules.push(
@@ -34,21 +33,8 @@ if (emailService && emailAuthUser && emailAuthPass) {
   );
 }
 
-if (redisConnectionUrl) {
-  dynamicModules.push(RedisModule.forRoot(redisConnectionUrl));
-}
-
 @Module({
   imports: [
-    // 局部可以通过 SkipThrottle Throttle 跳过或覆盖全局配置
-    // ThrottlerModule.forRoot([
-    //   {
-    //     // 单位毫秒
-    //     ttl: getEnvConfig('APP_THROTTLE_TTL'),
-    //     // 单位时间内限制的次数
-    //     limit: getEnvConfig('APP_THROTTLE_LIMIT'),
-    //   },
-    // ]),
     MysqlModule.forRoot({
       host: getEnvConfig('MYSQL_HOST'),
       user: getEnvConfig('MYSQL_USER'),
@@ -58,6 +44,11 @@ if (redisConnectionUrl) {
       debug: getEnvConfig('MYSQL_DEBUG'),
     }),
     JwtModule.register({ secret: getEnvConfig('APP_JWT_SECRET') }),
+    RedisModule.forRoot({
+      host: getEnvConfig('REDIS_HOST'),
+      port: getEnvConfig('REDIS_PORT'),
+      password: getEnvConfig('REDIS_PASSWORD'),
+    }),
     ...dynamicModules,
     UserModule,
     PermissionModule,

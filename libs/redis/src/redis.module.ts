@@ -1,10 +1,10 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { RedisModule as IORedisModule } from '@liaoliaots/nestjs-redis';
+import { RedisClientOptions, RedisModule as IORedisModule } from '@liaoliaots/nestjs-redis';
 import { RedisService } from './redis.service';
 
 @Module({})
 export class RedisModule {
-  static forRoot(url: string): DynamicModule {
+  static forRoot(options: RedisClientOptions): DynamicModule {
     return {
       module: RedisModule,
       imports: [
@@ -12,9 +12,7 @@ export class RedisModule {
           closeClient: true,
           readyLog: true,
           errorLog: true,
-          config: {
-            url,
-          },
+          config: options,
         }),
       ],
       providers: [RedisService],

@@ -1,14 +1,14 @@
 <!-- TOC -->
 * [compass user service](#compass-user-service)
-  * [特性](#)
-    * [支持读取配置文件](#)
+  * [特性](#特性)
+    * [支持读取配置文件](#支持读取配置文件)
     * [Typescript/Jest/Airbnb Eslint/Prettier](#typescriptjestairbnb-eslintprettier)
-    * [接口多版本支持](#)
-    * [接口限流保护](#)
-    * [约束接口进参,移除非白名单属性,自动转换数据为符合预期的类型](#)
-    * [支持Swagger API文档](#swagger-api)
-    * [基于Docker快速构建分发](#docker)
-    * [默认提供Github Actions文件进行自动lint和部署](#github-actionslint)
+    * [接口多版本支持](#接口多版本支持)
+    * [接口限流保护](#接口限流保护)
+    * [约束接口进参,移除非白名单属性,自动转换数据为符合预期的类型](#约束接口进参移除非白名单属性自动转换数据为符合预期的类型)
+    * [支持Swagger API文档](#支持swagger-api文档)
+    * [基于Docker快速构建分发](#基于docker快速构建分发)
+    * [默认提供Github Actions文件进行自动lint和部署](#默认提供github-actions文件进行自动lint和部署)
 <!-- TOC -->
 
 # compass user service
@@ -18,6 +18,8 @@
 - [ ] 角色管理
 - [ ] 权限管理
 - [ ] JWT授权
+
+本服务强依赖Mysql,Redis,Email等服务.请参考环境变量配置说明
 
 ## 特性
 
@@ -33,6 +35,8 @@ console.log('指定配置变量: ', getEnvConfig('NODE_ENV'));
 配置文件默认读取程序执行目录下的.env文件,需要修改配置路径提供ENV_FILE_PATH环境变量即可, 内部取值: `process.env.ENV_FILE_PATH || path.join(process.cwd(), '.env')`
 
 所有可用的环境变量请参考`libs/common/src/interfaces/environment.ts`文件内的 `EnvironmentVariablesDto` 类型定义说明
+
+也可参考 `.env.example` 文件示例
 
 ### Typescript/Jest/Airbnb Eslint/Prettier
 
