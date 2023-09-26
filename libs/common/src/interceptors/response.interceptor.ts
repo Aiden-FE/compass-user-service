@@ -1,6 +1,6 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
-import { catchError, map, Observable, of, throwError } from 'rxjs';
-import { HttpResponse } from '@app/common';
+import { CallHandler, ExecutionContext, HttpStatus, Injectable, Logger, NestInterceptor } from '@nestjs/common';
+import { catchError, map, Observable, of } from 'rxjs';
+import { BusinessStatus, HttpResponse } from '@app/common';
 
 @Injectable()
 export default class ResponseInterceptor implements NestInterceptor {
@@ -18,11 +18,19 @@ export default class ResponseInterceptor implements NestInterceptor {
 
         return data.getMicroServiceResponse();
       }),
-      catchError((err: any) => {
+      catchError((err: unknown) => {
+        let resp: HttpResponse;
         if (err instanceof HttpResponse) {
-          return of(err.getMicroServiceResponse());
+          resp = err;
+        } else {
+          resp = new HttpResponse({
+            httpStatus: HttpStatus.INTERNAL_SERVER_ERROR,
+            statusCode: BusinessStatus.INTERNAL_SERVER_ERROR,
+            message: 'Server internal error',
+          });
+          Logger.warn(err);
         }
-        return throwError(() => err);
+        return of(resp.getMicroServiceResponse());
       }),
     );
   }
