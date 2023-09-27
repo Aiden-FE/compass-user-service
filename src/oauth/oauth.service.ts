@@ -1,14 +1,22 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { BusinessStatus, getEnvConfig, HttpResponse, replaceVariablesInString } from '@app/common';
+import {
+  BusinessStatus,
+  encodeHMAC,
+  getEnvConfig,
+  HttpResponse,
+  replaceVariablesInString,
+  wrapUnknownError,
+} from '@app/common';
 import { GoogleRecaptchaService } from '@app/google-recaptcha';
 import { EmailService } from '@app/email';
 import { random } from 'lodash';
 import { RedisService } from '@app/redis';
+import { JwtService } from '@nestjs/jwt';
 import { CreateOauthDto } from './dto/create-oauth.dto';
 import { UpdateOauthDto } from './dto/update-oauth.dto';
 import { OAuthEmailCaptchaDto } from './oauth.dto';
 import { EMAIL_CAPTCHA_TEMPLATE, REDIS_KEYS, SYSTEM_EMAIL_DISPLAY_ACCOUNT } from '../common';
-import { CreateUserByEmailDto } from '../user/dto/create-user.dto';
+import { CreateUserByEmailDto, LoginByEmailDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 
 @Injectable()
@@ -18,6 +26,7 @@ export class OauthService {
     private emailService: EmailService,
     private redisService: RedisService,
     private userService: UserService,
+    private jwtService: JwtService,
   ) {}
 
   /** 发送邮箱验证码 */
@@ -88,7 +97,7 @@ export class OauthService {
       .then(
         () =>
           new HttpResponse({
-            message: '验证通过',
+            message: '已发送邮件验证码',
           }),
       )
       .catch((e) => {
@@ -102,15 +111,42 @@ export class OauthService {
 
   /** 创建邮箱账号 */
   async createEmailAccount(params: CreateUserByEmailDto) {
-    const resp = await this.userService.createByEmail(params);
-    if (resp.getStatusCode() === BusinessStatus.OK) {
-      return this.userService.findOne(resp.getResponse().data);
-    }
-    return resp;
+    return this.userService.createByEmail(params).catch((err) => wrapUnknownError(err));
   }
 
-  async createUserToken() {
-    //
+  /** 邮箱登录 */
+  async loginByEmail(params: LoginByEmailDto, ip?: string) {
+    let valid: boolean;
+    if (getEnvConfig('NODE_ENV') === 'development') {
+      valid = true;
+    } else {
+      valid = await this.grService.verifyRecaptcha({
+        score: 0.9, // 登录需要较高准确度,避免被恶意刷邮件
+        response: params.recaptcha,
+        remoteip: ip,
+      });
+    }
+    if (!valid) {
+      Logger.log(`Google recaptcha 验证失败: ${params.recaptcha}`);
+      return new HttpResponse({
+        statusCode: BusinessStatus.FORBIDDEN,
+        message: '人机验证不通过',
+      });
+    }
+    const result = await this.userService.find({
+      email: params.email,
+      password: encodeHMAC(params.password),
+    });
+    if (!result) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.FORBIDDEN,
+        message: '邮箱或密码错误',
+      });
+    }
+    return {
+      ...result,
+      token: this.jwtService.sign(result, { expiresIn: getEnvConfig('APP_JWT_EXPIRES') }),
+    };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

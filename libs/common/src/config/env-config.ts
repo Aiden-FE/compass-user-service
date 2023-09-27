@@ -79,6 +79,10 @@ const schema = {
       type: 'string',
       nullable: true,
     },
+    APP_JWT_EXPIRES: {
+      type: 'string',
+      default: '14d',
+    },
   },
 };
 

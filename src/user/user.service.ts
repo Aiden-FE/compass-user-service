@@ -1,11 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { RedisService } from '@app/redis';
-import { BusinessStatus, encodeHMAC, generateUUID, HttpResponse, PaginationReply } from '@app/common';
+import {
+  BusinessStatus,
+  convertObjectToSQLWhere,
+  encodeHMAC,
+  generateUUID,
+  HttpResponse,
+  PaginationReply,
+} from '@app/common';
 import { MysqlService } from '@app/mysql';
 import { CreateUserByEmailDto, CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { REDIS_KEYS } from '../common';
 import { QueryUsersDto } from './user.dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -78,8 +86,21 @@ export class UserService {
 
   async findOne(id: number) {
     const [result] = await this.mysqlService.mainPool.query(
-      'SELECT `id`, `uid`, `email`, `name`, `nickname`, `gender`, `birthday` FROM `users` WHERE `id` = ? AND `enabled` = true',
+      'SELECT `u.id`, `u.uid`, `u.email`, `u.name`, `u.nickname`, `u.gender`, `u.birthday`, GROUP_CONCAT(`rtu.A`) as `roles` FROM `users u` JOIN `_roles_to_users rtu` ON `u.id` = `rtu.B` WHERE `u.id` = ? AND `u.enabled` = true GROUP BY `u.id`',
       id,
+    );
+    return result?.[0] || null;
+  }
+
+  async find(params: Partial<User>) {
+    const [result] = await this.mysqlService.mainPool.query(
+      `SELECT u.id, u.uid, u.name, u.nickname, u.gender, u.birthday, GROUP_CONCAT(rtu.A) as roles
+       FROM \`users\` u
+       LEFT JOIN \`_roles_to_users\` rtu
+       on u.id = rtu.B
+       WHERE ${convertObjectToSQLWhere({ ...params, enabled: true }, { prefix: 'u.' })}
+       GROUP BY u.id;
+      `,
     );
     return result?.[0] || null;
   }

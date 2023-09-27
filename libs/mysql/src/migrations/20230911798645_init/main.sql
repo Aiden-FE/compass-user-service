@@ -161,7 +161,7 @@ VALUES ('permissions_create', '创建权限', NULL),
 
 INSERT INTO `roles` (name, is_system, description) VALUES ('administrator', true, '管理员');
 
-INSERT INTO `users` (uid, password, email) VALUES ('29dfgb35-2hac-hehe-8309-fa232f687eb0', 'fa232f0d7eb0', 'admin@system.com');
+INSERT INTO `users` (uid, password, email) VALUES ('29dfgb35-2hac-hehe-8309-fa232f687eb0', 'e6d4625ec09d7839749b70f303ffd204b1a7fed4', 'admin@system.com');
 
 INSERT INTO `_permissions_to_roles` (`A`, `B`) SELECT p.id, r.id FROM permissions p, roles r WHERE r.name = 'administrator';
 INSERT INTO `_roles_to_users` (`A`, `B`) SELECT r.id, u.id FROM roles r, users u WHERE r.name = 'administrator' AND u.email = 'admin@system.com';

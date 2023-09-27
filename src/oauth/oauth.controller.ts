@@ -5,7 +5,7 @@ import { OauthService } from './oauth.service';
 import { CreateOauthDto } from './dto/create-oauth.dto';
 import { UpdateOauthDto } from './dto/update-oauth.dto';
 import { OAuthEmailCaptchaDto } from './oauth.dto';
-import { CreateUserByEmailDto } from '../user/dto/create-user.dto';
+import { CreateUserByEmailDto, LoginByEmailDto } from '../user/dto/create-user.dto';
 
 @Controller()
 export class OauthController {
@@ -27,6 +27,16 @@ export class OauthController {
   })
   registerEmail(@MSPayload('body') payload: CreateUserByEmailDto) {
     return this.oauthService.createEmailAccount(payload);
+  }
+
+  // 用户登录
+  @Public()
+  @MessagePattern({
+    method: 'POST',
+    url: '/oauth/login/email',
+  })
+  loginByEmail(@MSPayload('body') payload: LoginByEmailDto) {
+    return this.oauthService.loginByEmail(payload);
   }
 
   @MessagePattern('createOauth')

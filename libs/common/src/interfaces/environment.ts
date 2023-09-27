@@ -24,6 +24,11 @@ export interface EnvironmentVariablesDto {
    */
   APP_JWT_SECRET?: string;
   /**
+   * JWT 授权超时
+   * @default 14d
+   */
+  APP_JWT_EXPIRES?: string;
+  /**
    * 谷歌人机校验密钥, 不设置相关校验接口会异常
    * @default example
    */
@@ -79,6 +84,7 @@ export type EnvironmentVariables = EnvironmentVariablesDto &
       | 'MYSQL_DEBUG'
       | 'APP_HMAC_SECRET'
       | 'APP_JWT_SECRET'
+      | 'APP_JWT_EXPIRES'
       | 'APP_GOOGLE_RECAPTCHA_SECRET'
     >
   >;

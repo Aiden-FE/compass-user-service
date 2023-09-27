@@ -8,7 +8,9 @@ export const VALIDATION_OPTION: ValidationPipeOptions = {
   // skipMissingProperties: true, // 跳过未定义或定义null的验证
   // disableErrorMessages: true, // 禁用详细错误信息
   validateCustomDecorators: true,
-  // enableImplicitConversion: true,
+  transformOptions: {
+    enableImplicitConversion: true,
+  },
   exceptionFactory: (errors: ValidationError[]) => {
     return new HttpResponse({
       statusCode: BusinessStatus.EXPECTATION_FAILED,
