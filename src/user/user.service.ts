@@ -102,7 +102,13 @@ export class UserService {
        GROUP BY u.id;
       `,
     );
-    return result?.[0] || null;
+    const userInfo = result?.[0] || null;
+    if (userInfo.roles) {
+      userInfo.roles = userInfo.roles.split(',').map(Number);
+    } else {
+      userInfo.roles = [];
+    }
+    return userInfo;
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {

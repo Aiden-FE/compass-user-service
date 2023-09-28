@@ -1,13 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { MysqlService } from '@app/mysql';
-import { PaginationReply } from '@app/common';
+import { convertArrayToSQLWhere, PaginationReply } from '@app/common';
+import { RedisService } from '@app/redis';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { QueryRolesDto } from './role.dto';
+import { REDIS_KEYS } from '../common';
 
 @Injectable()
 export class RoleService {
-  constructor(private mysqlService: MysqlService) {}
+  constructor(
+    private mysqlService: MysqlService,
+    private redisService: RedisService,
+  ) {}
 
   async create(createRoleDto: CreateRoleDto) {
     const [result] = await this.mysqlService.mainPool.query(
@@ -43,6 +48,63 @@ export class RoleService {
       id,
     );
     return result?.[0] || null;
+  }
+
+  /**
+   * @description 在Redis 缓存中查找对应角色权限
+   * @param roleId
+   */
+  async findPermissionsInRedisByRoleId(roleId: number) {
+    // 不使用枚举方式是为了尽可能最快的读取目标值
+    const originPermissions = await this.redisService.get(`role/${roleId}`);
+    if (originPermissions) {
+      this.redisService.refresh(REDIS_KEYS.ROLE_PERMISSIONS, { params: { roleId } });
+      return JSON.parse(originPermissions);
+    }
+    return null;
+  }
+
+  /**
+   * @description 在Redis 缓存中存储对应角色权限
+   * @param roleId
+   * @param permissions
+   */
+  async setPermissionsToRedisByRoleId(roleId: number, permissions: string[] = []) {
+    return this.redisService.set(REDIS_KEYS.ROLE_PERMISSIONS, JSON.stringify(permissions), {
+      params: { roleId },
+    });
+  }
+
+  /**
+   * @description Find all matching roles by role IDs
+   * @param ids
+   */
+  async findRolesByIds(ids: number[]) {
+    if (!ids || !ids.length) {
+      return [];
+    }
+    const sql = `SELECT r.id, r.name, r.description, r.is_system as isSystem, GROUP_CONCAT(p.key) as permissions
+      FROM \`roles\` r
+      LEFT JOIN \`_permissions_to_roles\` ptr
+          ON r.id = ptr.B
+      LEFT JOIN \`permissions\` p
+          ON ptr.A = p.id
+      WHERE ${convertArrayToSQLWhere(ids, { prefix: 'r.id' })}
+      GROUP BY r.id;`;
+    Logger.debug(sql);
+    const [result] = await this.mysqlService.mainPool.query(sql);
+    if (!result) {
+      return [];
+    }
+    return (result as any[]).map((data) => {
+      const role = { ...data };
+      if (role.permissions) {
+        role.permissions = role.permissions.split(',');
+      } else {
+        role.permissions = [];
+      }
+      return role;
+    });
   }
 
   async update(id: number, updateRoleDto: UpdateRoleDto) {

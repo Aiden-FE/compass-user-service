@@ -44,6 +44,7 @@ export function replaceVariablesInString(templateString: string, params: Record<
  * @param params
  * @param [option]
  * @param [option.prefix] 在字段前追加前缀
+ * @param [option.condition=AND] 条件值
  * @example
  * // SELECT * FROM `demo` WHERE phone = '*****' AND enabled = true
  * query(`SELECT * FROM \`demo\` WHERE ${convertObjectToSQLWhere({ phone: '*****', enabled: true })}`)
@@ -54,12 +55,29 @@ export function convertObjectToSQLWhere(
   params: Record<string, unknown>,
   option?: {
     prefix?: string;
+    condition?: string;
   },
 ) {
-  const { prefix } = { ...option };
+  const { prefix, condition } = { condition: 'AND', ...option };
   return Object.keys(params)
     .map((key) => {
       return `${prefix}${key} = ${typeof params[key] === 'string' ? `'${params[key]}'` : params[key]}`;
     })
-    .join(' AND ');
+    .join(` ${condition} `);
+}
+
+export function convertArrayToSQLWhere(
+  params: (string | number)[],
+  option?: {
+    prefix?: string;
+    condition?: string;
+  },
+) {
+  const { prefix, condition } = {
+    condition: 'IN',
+    prefix: 'id',
+    ...option,
+  };
+
+  return `${prefix} ${condition} (${params.join(',')})`;
 }

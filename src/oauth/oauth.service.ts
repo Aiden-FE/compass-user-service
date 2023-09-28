@@ -9,7 +9,7 @@ import {
 } from '@app/common';
 import { GoogleRecaptchaService } from '@app/google-recaptcha';
 import { EmailService } from '@app/email';
-import { random } from 'lodash';
+import { random, uniq } from 'lodash';
 import { RedisService } from '@app/redis';
 import { JwtService } from '@nestjs/jwt';
 import { CreateOauthDto } from './dto/create-oauth.dto';
@@ -18,6 +18,7 @@ import { OAuthEmailCaptchaDto } from './oauth.dto';
 import { EMAIL_CAPTCHA_TEMPLATE, REDIS_KEYS, SYSTEM_EMAIL_DISPLAY_ACCOUNT } from '../common';
 import { CreateUserByEmailDto, LoginByEmailDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
+import { RoleService } from '../role/role.service';
 
 @Injectable()
 export class OauthService {
@@ -27,6 +28,7 @@ export class OauthService {
     private redisService: RedisService,
     private userService: UserService,
     private jwtService: JwtService,
+    private roleService: RoleService,
   ) {}
 
   /** 发送邮箱验证码 */
@@ -147,6 +149,65 @@ export class OauthService {
       ...result,
       token: this.jwtService.sign(result, { expiresIn: getEnvConfig('APP_JWT_EXPIRES') }),
     };
+  }
+
+  // 根据token获取用户信息
+  async getUserInfoByToken(token?: string) {
+    if (!token) {
+      return new HttpResponse({
+        statusCode: BusinessStatus.UNAUTHORIZED,
+        data: null,
+        message: '未提供授权信息',
+      });
+    }
+    try {
+      const userInfo = this.jwtService.verify(token);
+      if (userInfo.roles) {
+        const proArr: Promise<any>[] = [];
+        userInfo.roles.forEach((roleId) => {
+          proArr.push(this.roleService.findPermissionsInRedisByRoleId(roleId));
+        });
+        let permissions = await Promise.all(proArr);
+
+        // 取出redis中没有缓存的数据以便重新获取
+        const roleIds = permissions
+          .map((data, index) => {
+            return data === null ? userInfo.roles[index] : null;
+          })
+          .filter((item) => item !== null);
+        permissions = permissions.filter((item) => item !== null).flat();
+        const rolesData = await this.roleService.findRolesByIds(roleIds);
+
+        // 将角色对应权限记入缓存
+        if (rolesData.length) {
+          const proArr2: Promise<any>[] = [];
+          rolesData.forEach((item) => {
+            proArr2.push(this.roleService.setPermissionsToRedisByRoleId(item.id, item.permissions));
+          });
+          await Promise.all(proArr2);
+        }
+
+        userInfo.permissions = uniq(
+          rolesData
+            .map((role) => {
+              const data = role.permissions;
+              // eslint-disable-next-line no-param-reassign
+              delete role.permissions;
+              return data;
+            })
+            .flat()
+            .concat(permissions),
+        );
+      }
+      return userInfo;
+    } catch (e) {
+      Logger.warn(e);
+      return new HttpResponse({
+        statusCode: BusinessStatus.UNAUTHORIZED,
+        data: null,
+        message: '授权信息已失效或不正确',
+      });
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

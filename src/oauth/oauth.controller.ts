@@ -7,11 +7,11 @@ import { UpdateOauthDto } from './dto/update-oauth.dto';
 import { OAuthEmailCaptchaDto } from './oauth.dto';
 import { CreateUserByEmailDto, LoginByEmailDto } from '../user/dto/create-user.dto';
 
+@Public()
 @Controller()
 export class OauthController {
   constructor(private readonly oauthService: OauthService) {}
 
-  @Public()
   @MessagePattern({
     method: 'POST',
     url: '/oauth/captcha/email',
@@ -20,7 +20,6 @@ export class OauthController {
     return this.oauthService.sendEmailCaptcha(payload, ip);
   }
 
-  @Public()
   @MessagePattern({
     method: 'POST',
     url: '/oauth/register/email',
@@ -30,13 +29,23 @@ export class OauthController {
   }
 
   // 用户登录
-  @Public()
   @MessagePattern({
     method: 'POST',
     url: '/oauth/login/email',
   })
   loginByEmail(@MSPayload('body') payload: LoginByEmailDto) {
     return this.oauthService.loginByEmail(payload);
+  }
+
+  @MessagePattern({
+    method: 'GET',
+    url: '/oauth/user-info',
+  })
+  getUserInfo(@MSPayload('user') user: any, @MSPayload('headers.authorization') token?: string) {
+    if (user) {
+      return user;
+    }
+    return this.oauthService.getUserInfoByToken(token);
   }
 
   @MessagePattern('createOauth')

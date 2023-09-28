@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, HttpStatus } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
-import { HttpResponse, IS_PUBLIC_KEY } from '@app/common';
+import { AUTH_KEY, HttpResponse, IS_PUBLIC_KEY } from '@app/common';
 import { RpcException } from '@nestjs/microservices';
 
 export default class JWTAuthGuard implements CanActivate {
@@ -19,7 +19,7 @@ export default class JWTAuthGuard implements CanActivate {
     }
     const rpcCtx = context.switchToRpc();
     const { user } = rpcCtx.getData();
-    if (!user) {
+    if (!user || !user.permissions?.length) {
       throw new RpcException(
         new HttpResponse({
           httpStatus: HttpStatus.UNAUTHORIZED,
@@ -27,7 +27,31 @@ export default class JWTAuthGuard implements CanActivate {
         }).getMicroServiceResponse(),
       );
     }
-    // 当存在用户信息则检查权限是否可用
+    const option = this.reflector.getAllAndOverride<{ mode: 'AND' | 'OR'; permissions: string[] }>(AUTH_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    // 如果未使用 @Auth() 装饰器的接口意味着不需要具体权限码授权,有token即可
+    if (!option || !option.permissions?.length) return true;
+    let valid: boolean;
+    if (option.mode === 'AND') {
+      // AND 权限处理
+      valid = option.permissions.reduce<boolean>((result, key) => {
+        if (!result) return false;
+        return user.permissions.includes(key);
+      }, true);
+    } else {
+      // OR 权限处理
+      valid = option.permissions.some((key) => user.permissions.includes(key));
+    }
+    if (!valid) {
+      throw new RpcException(
+        new HttpResponse({
+          httpStatus: HttpStatus.UNAUTHORIZED,
+          message: 'Unauthorized',
+        }).getMicroServiceResponse(),
+      );
+    }
     return true;
   }
 }

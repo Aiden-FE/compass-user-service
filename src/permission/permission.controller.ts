@@ -1,9 +1,12 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
+import { Auth, MSPayload, PERMISSIONS } from '@app/common';
 import { PermissionService } from './permission.service';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
+import { QueryPermissionDto } from './dto/query-permission.dto';
 
+@Auth(PERMISSIONS.PERMISSION_QUERY)
 @Controller()
 export class PermissionController {
   constructor(private readonly permissionService: PermissionService) {}
@@ -15,13 +18,10 @@ export class PermissionController {
 
   @MessagePattern({
     method: 'GET',
-    url: '/permissions',
+    url: '/permission/all',
   })
-  findAll() {
-    return this.permissionService.findAll({
-      pageNum: 0,
-      pageSize: 20,
-    });
+  findAll(@MSPayload('query') params: QueryPermissionDto) {
+    return this.permissionService.findAll(params);
   }
 
   @MessagePattern('findOnePermission')

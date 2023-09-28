@@ -16,4 +16,9 @@ export enum REDIS_KEYS {
    * @return {'true'}
    */
   CAPTCHA_LOCK = 'captcha/lock/:type/:account',
+  /**
+   * @description 角色对应的权限信息
+   * @param {number} roleId
+   */
+  ROLE_PERMISSIONS = 'role/:roleId',
 }

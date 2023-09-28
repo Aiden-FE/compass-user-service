@@ -7,4 +7,5 @@ export interface MicroServiceRequest<Body = any, Query = any> {
   body: Body;
   ip?: string;
   ips?: string[];
+  user?: any | null;
 }

@@ -61,6 +61,22 @@ export class RedisService {
     return this.getClient(option?.bucket).del(objectKeyStr);
   }
 
+  // 刷新过期时间
+  refresh(
+    objectKey: string,
+    option?: {
+      bucket?: 'default';
+      milliseconds?: number;
+      params?: Record<string, any>; // 替换objectKey中的变量值
+    },
+  ) {
+    let objectKeyStr: string = objectKey;
+    if (option?.params) {
+      objectKeyStr = replaceStringParams(objectKeyStr, option.params);
+    }
+    return this.getClient(option?.bucket).pexpire(objectKeyStr, option?.milliseconds || 1000 * 60 * 5);
+  }
+
   public getClient(bucket?: 'default') {
     switch (bucket) {
       case 'default':
