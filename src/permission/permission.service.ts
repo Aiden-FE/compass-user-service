@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { MysqlService } from '@app/mysql';
 import { PaginationReply } from '@app/common';
 import { CreatePermissionDto } from './dto/create-permission.dto';
@@ -9,18 +9,30 @@ import { QueryPermissionDto } from './dto/query-permission.dto';
 export class PermissionService {
   constructor(private mysqlService: MysqlService) {}
 
+  /**
+   * @description 创建权限
+   * @param createPermissionDto
+   */
   async create(createPermissionDto: CreatePermissionDto) {
-    const [result] = await this.mysqlService.mainPool.query(
-      'INSERT INTO `permissions` (`key`, `name`, `description`) VALUES (?, ?, ?)',
-      [createPermissionDto.key, createPermissionDto.name, createPermissionDto.description],
-    );
+    const sql = 'INSERT INTO `permissions` (`key`, `name`, `description`) VALUES (?, ?, ?)';
+    Logger.debug(sql);
+    const [result] = await this.mysqlService.mainPool.query(sql, [
+      createPermissionDto.key,
+      createPermissionDto.name,
+      createPermissionDto.description,
+    ]);
     return (result as { insertId: number }).insertId;
   }
 
+  /**
+   * @description 根据条件查询所有权限
+   * @param findPermissionDto
+   */
   async findAll(findPermissionDto: QueryPermissionDto) {
     const whereSql = findPermissionDto.name ? `WHERE \`name\` LIKE '%${findPermissionDto.name}%' ` : '';
     const subSql = `(SELECT COUNT(*) FROM \`permissions\` ${whereSql}) as total`;
     const sql = `SELECT \`id\`, \`key\`, \`name\`, \`description\`, ${subSql} FROM \`permissions\` ${whereSql}LIMIT ? OFFSET ?`;
+    Logger.debug(sql);
     const [result] = await this.mysqlService.mainPool.query(sql, [
       findPermissionDto.pageSize,
       findPermissionDto.pageNum * findPermissionDto.pageSize,
@@ -37,31 +49,45 @@ export class PermissionService {
     });
   }
 
-  async findOne(id: number) {
-    const [result] = await this.mysqlService.mainPool.query(
-      'SELECT `id`, `key`, `name`, `description` FROM `permissions` WHERE `id` = ?',
-      id,
-    );
+  /**
+   * @description 根据key查询权限具体信息
+   * @param key
+   */
+  async findOne(key: string) {
+    const sql = 'SELECT `id`, `key`, `name`, `description` FROM `permissions` WHERE `key` = ?';
+    Logger.debug(sql);
+    const [result] = await this.mysqlService.mainPool.query(sql, key);
     return result?.[0] || null;
   }
 
-  async update(id: number, updatePermissionDto: UpdatePermissionDto) {
+  /**
+   * @description 更新权限
+   * @param updatePermissionDto
+   */
+  async update(updatePermissionDto: UpdatePermissionDto) {
     let sql = 'UPDATE `permissions` SET';
     const values: unknown[] = [];
     Object.keys(updatePermissionDto).forEach((key) => {
-      if (key === 'id') return;
-      sql += ` \`${key}\` = ?,`;
+      if (key === 'key') return;
+      sql += ` ${key} = ?,`;
       values.push(updatePermissionDto[key]);
     });
     sql = sql.slice(0, -1);
-    sql += ' WHERE id = ?';
-    values.push(id);
+    sql += ' WHERE `key` = ?';
+    values.push(updatePermissionDto.key);
+    Logger.debug(sql);
     await this.mysqlService.mainPool.query(sql, values);
     return true;
   }
 
-  async remove(id: number) {
-    await this.mysqlService.mainPool.query('DELETE FROM `permissions` WHERE `id` = ?', id);
+  /**
+   * @description 删除权限
+   * @param key
+   */
+  async remove(key: string) {
+    const sql = 'DELETE FROM `permissions` WHERE `key` = ?';
+    Logger.debug(sql);
+    await this.mysqlService.mainPool.query(sql, key);
     return true;
   }
 }

@@ -103,9 +103,9 @@ export class UserService {
       `,
     );
     const userInfo = result?.[0] || null;
-    if (userInfo.roles) {
+    if (userInfo?.roles) {
       userInfo.roles = userInfo.roles.split(',').map(Number);
-    } else {
+    } else if (userInfo) {
       userInfo.roles = [];
     }
     return userInfo;

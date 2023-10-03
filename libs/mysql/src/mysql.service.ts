@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { Pool, createPool, PoolOptions } from 'mysql2/promise';
+import { Pool, createPool, PoolOptions, PoolConnection } from 'mysql2/promise';
 
 @Injectable()
 export class MysqlService implements OnModuleDestroy {
@@ -21,5 +21,32 @@ export class MysqlService implements OnModuleDestroy {
         Logger.warn(e);
       }
     }
+  }
+
+  /**
+   * @description 使用事务
+   * @param callback
+   * @example
+   * const res = await transaction(async (connection) => {
+   *   const [result] = await connection.query('SELECT * FROM `demo`');
+   *   return result;
+   * });
+   * console.log('Response: ', res);
+   */
+  async transaction<Result = any>(callback: (connection: PoolConnection) => Promise<Result>) {
+    const connection = await this.mainPool.getConnection();
+    let result: any;
+    try {
+      await connection.beginTransaction();
+      result = await callback(connection);
+      await connection.commit();
+    } catch (e) {
+      await connection.rollback();
+      Logger.warn('发生错误,已回滚事务');
+      throw e;
+    } finally {
+      connection.release();
+    }
+    return result as Result;
   }
 }

@@ -7,3 +7,15 @@ export class QueryPermissionDto extends PaginationQueryDto {
   @MaxLength(24)
   name?: string;
 }
+
+export class QueryPermissionInfoDto {
+  @MinLength(1)
+  @MaxLength(128)
+  key: string;
+}
+
+export class DeletePermissionDto {
+  @MinLength(1)
+  @MaxLength(128)
+  key: string;
+}

@@ -118,7 +118,7 @@ export class HttpResponse<Data = unknown> {
     this.option = {
       statusCode: BusinessStatus.OK,
       data: null,
-      message: 'Request successful',
+      message: 'Request successfully',
       responseType: 'json',
       httpStatus: HttpStatus.OK,
       ...option,

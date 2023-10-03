@@ -1,21 +1,25 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { MessagePattern } from '@nestjs/microservices';
 import { Auth, MSPayload, PERMISSIONS } from '@app/common';
 import { PermissionService } from './permission.service';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
-import { QueryPermissionDto } from './dto/query-permission.dto';
+import { DeletePermissionDto, QueryPermissionDto, QueryPermissionInfoDto } from './dto/query-permission.dto';
 
-@Auth(PERMISSIONS.PERMISSION_QUERY)
 @Controller()
 export class PermissionController {
   constructor(private readonly permissionService: PermissionService) {}
 
-  @MessagePattern('createPermission')
-  create(@Payload() createPermissionDto: CreatePermissionDto) {
+  @Auth(PERMISSIONS.PERMISSION_CREATE)
+  @MessagePattern({
+    method: 'POST',
+    url: '/permission',
+  })
+  create(@MSPayload('body') createPermissionDto: CreatePermissionDto) {
     return this.permissionService.create(createPermissionDto);
   }
 
+  @Auth(PERMISSIONS.PERMISSION_QUERY)
   @MessagePattern({
     method: 'GET',
     url: '/permission/all',
@@ -24,18 +28,30 @@ export class PermissionController {
     return this.permissionService.findAll(params);
   }
 
-  @MessagePattern('findOnePermission')
-  findOne(@Payload() id: number) {
-    return this.permissionService.findOne(id);
+  @Auth(PERMISSIONS.PERMISSION_QUERY)
+  @MessagePattern({
+    method: 'GET',
+    url: '/permission',
+  })
+  findOne(@MSPayload('query') query: QueryPermissionInfoDto) {
+    return this.permissionService.findOne(query.key);
   }
 
-  @MessagePattern('updatePermission')
-  update(@Payload() updatePermissionDto: UpdatePermissionDto) {
-    return this.permissionService.update(updatePermissionDto.id, updatePermissionDto);
+  @Auth(PERMISSIONS.PERMISSION_UPDATE)
+  @MessagePattern({
+    method: 'PUT',
+    url: '/permission',
+  })
+  update(@MSPayload('body') updatePermissionDto: UpdatePermissionDto) {
+    return this.permissionService.update(updatePermissionDto);
   }
 
-  @MessagePattern('removePermission')
-  remove(@Payload() id: number) {
-    return this.permissionService.remove(id);
+  @Auth(PERMISSIONS.PERMISSION_DELETE)
+  @MessagePattern({
+    method: 'DELETE',
+    url: '/permission',
+  })
+  remove(@MSPayload('body') body: DeletePermissionDto) {
+    return this.permissionService.remove(body.key);
   }
 }

@@ -1,41 +1,57 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { MessagePattern } from '@nestjs/microservices';
+import { Auth, MSPayload, PERMISSIONS } from '@app/common';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { DeleteRoleDto, QueryRoleInfoDto, QueryRolesDto } from './role.dto';
 
 @Controller()
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
-  @MessagePattern('createRole')
-  create(@Payload() createRoleDto: CreateRoleDto) {
+  @Auth(PERMISSIONS.ROLE_CREATE)
+  @MessagePattern({
+    method: 'POST',
+    url: '/role',
+  })
+  create(@MSPayload('body') createRoleDto: CreateRoleDto) {
     return this.roleService.create(createRoleDto);
   }
 
+  @Auth(PERMISSIONS.ROLE_QUERY)
   @MessagePattern({
     method: 'GET',
-    url: '/roles',
+    url: '/role/all',
   })
-  findAll() {
-    return this.roleService.findAll({
-      pageNum: 0,
-      pageSize: 20,
-    });
+  findAll(@MSPayload('query') query: QueryRolesDto) {
+    return this.roleService.findAll(query);
   }
 
-  @MessagePattern('findOneRole')
-  findOne(@Payload() id: number) {
-    return this.roleService.findOne(id);
+  @Auth(PERMISSIONS.ROLE_QUERY)
+  @MessagePattern({
+    method: 'GET',
+    url: '/role',
+  })
+  findOne(@MSPayload('query') query: QueryRoleInfoDto) {
+    return this.roleService.findOne(query.id);
   }
 
-  @MessagePattern('updateRole')
-  update(@Payload() updateRoleDto: UpdateRoleDto) {
-    return this.roleService.update(updateRoleDto.id, updateRoleDto);
+  @Auth(PERMISSIONS.ROLE_UPDATE)
+  @MessagePattern({
+    method: 'PUT',
+    url: '/role',
+  })
+  update(@MSPayload('body') body: UpdateRoleDto) {
+    return this.roleService.update(body.id, body);
   }
 
-  @MessagePattern('removeRole')
-  remove(@Payload() id: number) {
-    return this.roleService.remove(id);
+  @Auth(PERMISSIONS.ROLE_DELETE)
+  @MessagePattern({
+    method: 'DELETE',
+    url: '/role',
+  })
+  remove(@MSPayload('body') body: DeleteRoleDto) {
+    return this.roleService.remove(body.id);
   }
 }

@@ -14,18 +14,36 @@ export class RoleService {
     private redisService: RedisService,
   ) {}
 
+  /**
+   * @description 创建角色
+   * @param createRoleDto
+   */
   async create(createRoleDto: CreateRoleDto) {
-    const [result] = await this.mysqlService.mainPool.query(
-      'INSERT INTO `roles` (`name`, `description`) VALUES (?, ?)',
-      [createRoleDto.name, createRoleDto.description],
-    );
-    return (result as { insertId: number }).insertId;
+    return new Promise((resolve) => {
+      this.mysqlService.transaction(async (connection) => {
+        const roleSql = 'INSERT INTO `roles` (`name`, `description`) VALUES (?, ?)';
+        Logger.debug(roleSql);
+        const [result] = await connection.query(roleSql, [createRoleDto.name, createRoleDto.description]);
+        const { insertId } = result as { insertId: number };
+        if (createRoleDto.permissions?.length) {
+          const ptrSql = 'INSERT INTO `_permissions_to_roles` (A, B) VALUES ?';
+          Logger.debug(ptrSql);
+          await connection.query(ptrSql, [createRoleDto.permissions.map((pid) => [pid, insertId])]);
+        }
+        resolve(insertId);
+      });
+    });
   }
 
+  /**
+   * @description 查询角色列表
+   * @param findRoleDto
+   */
   async findAll(findRoleDto: QueryRolesDto) {
     const whereSql = findRoleDto.name ? `WHERE \`name\` LIKE '%${findRoleDto.name}%' ` : '';
     const subSql = `(SELECT COUNT(*) FROM \`roles\` ${whereSql}) as total`;
     const sql = `SELECT \`id\`, \`name\`, \`description\`, ${subSql} FROM \`roles\` ${whereSql}LIMIT ? OFFSET ?`;
+    Logger.debug(sql);
     const [result] = await this.mysqlService.mainPool.query(sql, [
       findRoleDto.pageSize,
       findRoleDto.pageNum * findRoleDto.pageSize,
@@ -42,12 +60,26 @@ export class RoleService {
     });
   }
 
+  /**
+   * @description 查询角色信息
+   * @param id
+   */
   async findOne(id: number) {
-    const [result] = await this.mysqlService.mainPool.query(
-      'SELECT `id`, `name`, `description` FROM `roles` WHERE `id` = ?',
-      id,
-    );
-    return result?.[0] || null;
+    const sql = `SELECT r.id, r.name, r.description, GROUP_CONCAT(ptr.A) as permissions
+      FROM \`roles\` r
+      LEFT JOIN \`_permissions_to_roles\` ptr
+      ON r.id = ptr.B
+      WHERE r.id = ?
+      GROUP BY r.id`;
+    Logger.debug(sql);
+    const [result] = await this.mysqlService.mainPool.query(sql, id);
+    const roleInfo = result?.[0] || null;
+    if (roleInfo?.permissions) {
+      roleInfo.permissions = roleInfo.permissions.split(',').map(Number);
+    } else if (roleInfo) {
+      roleInfo.permissions = [];
+    }
+    return roleInfo;
   }
 
   /**
@@ -107,21 +139,43 @@ export class RoleService {
     });
   }
 
+  /**
+   * @description Update role info
+   * @param id
+   * @param updateRoleDto
+   */
   async update(id: number, updateRoleDto: UpdateRoleDto) {
-    let sql = 'UPDATE `roles` SET';
-    const values: unknown[] = [];
-    Object.keys(updateRoleDto).forEach((key) => {
-      if (key === 'id') return;
-      sql += ` \`${key}\` = ?,`;
-      values.push(updateRoleDto[key]);
+    return this.mysqlService.transaction(async (connection) => {
+      const sql = 'UPDATE `roles` SET ? WHERE id = ?';
+      Logger.debug(sql);
+      await connection.query(sql, [
+        {
+          name: updateRoleDto.name,
+          description: updateRoleDto.description,
+        },
+        id,
+      ]);
+      if (updateRoleDto.permissions) {
+        // 移除原关系表
+        const sqlRelation = 'DELETE FROM `_permissions_to_roles` WHERE B = ?';
+        Logger.debug(sqlRelation);
+        await connection.query(sqlRelation, id);
+        // 插入新关系表
+        const values = updateRoleDto.permissions.map((pid) => [pid, id]);
+        if (values.length) {
+          const sqlInsertRelation = 'INSERT INTO `_permissions_to_roles` (A, B) VALUES ?';
+          Logger.debug(sqlInsertRelation);
+          await connection.query(sqlInsertRelation, [values]);
+        }
+      }
+      return true;
     });
-    sql = sql.slice(0, -1);
-    sql += ' WHERE id = ?';
-    values.push(id);
-    await this.mysqlService.mainPool.query(sql, values);
-    return true;
   }
 
+  /**
+   * @description Delete role by ID
+   * @param id
+   */
   async remove(id: number) {
     await this.mysqlService.mainPool.query('DELETE FROM `roles` WHERE `id` = ?', id);
     return true;
