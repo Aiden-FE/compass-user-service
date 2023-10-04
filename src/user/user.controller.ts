@@ -1,27 +1,21 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
+import { Auth, MSPayload, PERMISSIONS } from '@app/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { QueryUsersDto } from './user.dto';
 
 @Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @MessagePattern('createUser')
-  create(@Payload() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
-  }
-
+  @Auth(PERMISSIONS.USER_QUERY)
   @MessagePattern({
     method: 'GET',
-    url: '/users',
+    url: '/user/all',
   })
-  findAll() {
-    return this.userService.findAll({
-      pageNum: 0,
-      pageSize: 20,
-    });
+  findAll(@MSPayload('query') query: QueryUsersDto) {
+    return this.userService.findAll(query);
   }
 
   @MessagePattern('findOneUser')

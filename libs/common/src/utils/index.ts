@@ -39,6 +39,12 @@ export function replaceVariablesInString(templateString: string, params: Record<
   }, templateString);
 }
 
+interface SQLWhereOption {
+  type: 'sql';
+  like?: boolean;
+  value: unknown;
+}
+
 /**
  * @description 将对象转换为sql条件
  * @param params
@@ -52,17 +58,27 @@ export function replaceVariablesInString(templateString: string, params: Record<
  * query(`SELECT * FROM \`demo\` u WHERE ${convertObjectToSQLWhere({ phone: '*****', enabled: true }, { prefix: 'u.' })}`)
  */
 export function convertObjectToSQLWhere(
-  params: Record<string, unknown>,
+  params: Record<string, any | SQLWhereOption>,
   option?: {
     prefix?: string;
     condition?: string;
   },
 ) {
-  const { prefix, condition } = { condition: 'AND', ...option };
+  const { prefix, condition } = { prefix: '', condition: 'AND', ...option };
   return Object.keys(params)
     .map((key) => {
+      if (params[key] === undefined) {
+        return undefined;
+      }
+      if (params[key]?.type === 'sql') {
+        const data = params[key] as SQLWhereOption;
+        if (data.like) {
+          return `${prefix}${key} LIKE '%${data.value}%'`;
+        }
+      }
       return `${prefix}${key} = ${typeof params[key] === 'string' ? `'${params[key]}'` : params[key]}`;
     })
+    .filter((sqlStr) => sqlStr !== undefined)
     .join(` ${condition} `);
 }
 

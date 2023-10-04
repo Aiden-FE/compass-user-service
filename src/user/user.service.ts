@@ -65,9 +65,23 @@ export class UserService {
   }
 
   async findAll(queryUsersDto: QueryUsersDto) {
-    const whereSql = queryUsersDto.name ? `WHERE \`name\` LIKE '%${queryUsersDto.name}%' ` : '';
-    const subSql = `(SELECT COUNT(*) FROM \`users\` ${whereSql}) as total`;
-    const sql = `SELECT \`id\`, \`uid\`, \`name\`, \`nickname\`, \`gender\`, \`birthday\`, ${subSql} FROM \`users\` ${whereSql}LIMIT ? OFFSET ?`;
+    const whereSql = convertObjectToSQLWhere({
+      name: queryUsersDto.name && {
+        type: 'sql',
+        value: queryUsersDto.name,
+        like: true,
+      },
+      nickname: queryUsersDto.nickname && {
+        type: 'sql',
+        value: queryUsersDto.nickname,
+        like: true,
+      },
+      telephone: queryUsersDto.telephone,
+      email: queryUsersDto.email,
+    });
+    const sql = `SELECT uid, name, nickname, gender, birthday, enabled, (SELECT COUNT(*) FROM \`users\` ${
+      whereSql ? `WHERE ${whereSql}` : ''
+    }) as total FROM \`users\` ${whereSql ? `WHERE ${whereSql}` : ''} LIMIT ? OFFSET ?`;
     const [result] = await this.mysqlService.mainPool.query(sql, [
       queryUsersDto.pageSize,
       queryUsersDto.pageNum * queryUsersDto.pageSize,
