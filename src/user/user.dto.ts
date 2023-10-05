@@ -1,5 +1,5 @@
 import { PaginationQueryDto } from '@app/common';
-import { IsEmail, IsMobilePhone, IsOptional, MaxLength } from 'class-validator';
+import { IsEmail, IsMobilePhone, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class QueryUsersDto extends PaginationQueryDto {
   @IsOptional()
@@ -18,3 +18,10 @@ export class QueryUsersDto extends PaginationQueryDto {
   @MaxLength(24)
   nickname?: string;
 }
+
+export class QueryUserDto {
+  @IsString()
+  uid: string;
+}
+
+export class DeleteUserDto extends QueryUserDto {}

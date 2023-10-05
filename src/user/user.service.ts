@@ -140,8 +140,8 @@ export class UserService {
     return true;
   }
 
-  async remove(id: number) {
-    await this.mysqlService.mainPool.query('DELETE FROM `users` WHERE `id` = ?', id);
+  async remove(uid: string) {
+    await this.mysqlService.mainPool.query('DELETE FROM `users` WHERE `uid` = ?', uid);
     return true;
   }
 }
