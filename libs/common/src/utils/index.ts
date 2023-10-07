@@ -97,3 +97,41 @@ export function convertArrayToSQLWhere(
 
   return `${prefix} ${condition} (${params.join(',')})`;
 }
+
+/**
+ * @description 根据条件过滤或转换对象的键值
+ * @param data
+ * @param options
+ */
+export function filterObjectBy<Data extends object>(
+  data: Data,
+  options?: {
+    excludeKeys?: (keyof Data)[];
+    /**
+     * @default [undefined, '']
+     */
+    excludeValues?: unknown[];
+    before?: (value: any, key: keyof Data, data: Data) => any;
+  },
+): Partial<Data> {
+  const { excludeKeys, excludeValues, before } = {
+    excludeKeys: [],
+    excludeValues: [undefined, ''],
+    ...options,
+  };
+  const obj: object = {};
+  Object.keys(data).forEach((key) => {
+    if (excludeKeys.includes(key as keyof Data)) {
+      return;
+    }
+    if (excludeValues.includes(data[key])) {
+      return;
+    }
+    let value = data[key];
+    if (before && typeof before === 'function') {
+      value = before(value, key as keyof Data, data);
+    }
+    obj[key] = value;
+  });
+  return obj;
+}

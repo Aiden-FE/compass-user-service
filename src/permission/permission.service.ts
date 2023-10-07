@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MysqlService } from '@app/mysql';
-import { PaginationReply } from '@app/common';
+import { filterObjectBy, PaginationReply } from '@app/common';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { QueryPermissionDto } from './dto/query-permission.dto';
@@ -65,18 +65,14 @@ export class PermissionService {
    * @param updatePermissionDto
    */
   async update(updatePermissionDto: UpdatePermissionDto) {
-    let sql = 'UPDATE `permissions` SET';
-    const values: unknown[] = [];
-    Object.keys(updatePermissionDto).forEach((key) => {
-      if (key === 'key') return;
-      sql += ` ${key} = ?,`;
-      values.push(updatePermissionDto[key]);
-    });
-    sql = sql.slice(0, -1);
-    sql += ' WHERE `key` = ?';
-    values.push(updatePermissionDto.key);
+    const sql = 'UPDATE `permissions` SET ? WHERE `key` = ?';
     Logger.debug(sql);
-    await this.mysqlService.mainPool.query(sql, values);
+    await this.mysqlService.mainPool.query(sql, [
+      filterObjectBy(updatePermissionDto, {
+        excludeKeys: ['key'],
+      }),
+      updatePermissionDto.key,
+    ]);
     return true;
   }
 

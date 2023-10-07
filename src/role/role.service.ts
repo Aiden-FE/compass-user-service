@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { MysqlService } from '@app/mysql';
-import { convertArrayToSQLWhere, PaginationReply } from '@app/common';
+import { convertArrayToSQLWhere, filterObjectBy, PaginationReply } from '@app/common';
 import { RedisService } from '@app/redis';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -149,10 +149,9 @@ export class RoleService {
       const sql = 'UPDATE `roles` SET ? WHERE id = ?';
       Logger.debug(sql);
       await connection.query(sql, [
-        {
-          name: updateRoleDto.name,
-          description: updateRoleDto.description,
-        },
+        filterObjectBy(updateRoleDto, {
+          excludeKeys: ['id', 'permissions'],
+        }),
         id,
       ]);
       if (updateRoleDto.permissions) {

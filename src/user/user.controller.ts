@@ -27,9 +27,13 @@ export class UserController {
     return this.userService.find({ uid: query.uid });
   }
 
-  @MessagePattern('updateUser')
-  update(@Payload() updateUserDto: UpdateUserDto) {
-    return this.userService.update(updateUserDto.id, updateUserDto);
+  @Auth(PERMISSIONS.USER_UPDATE)
+  @MessagePattern({
+    method: 'PUT',
+    url: '/user',
+  })
+  update(@MSPayload('body') updateUserDto: UpdateUserDto) {
+    return this.userService.update(updateUserDto.uid, updateUserDto);
   }
 
   @Auth(PERMISSIONS.USER_DELETE)

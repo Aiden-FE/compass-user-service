@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { RedisService } from '@app/redis';
 import {
   BusinessStatus,
   convertObjectToSQLWhere,
   encodeHMAC,
+  filterObjectBy,
   generateUUID,
   HttpResponse,
   PaginationReply,
@@ -125,19 +126,51 @@ export class UserService {
     return userInfo;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    let sql = 'UPDATE `users` SET';
-    const values: unknown[] = [];
-    Object.keys(updateUserDto).forEach((key) => {
-      if (key === 'id') return;
-      sql += ` \`${key}\` = ?,`;
-      values.push(updateUserDto[key]);
+  /**
+   * @description 更新用户信息
+   * @param uid
+   * @param updateUserDto
+   */
+  async update(uid: string, updateUserDto: UpdateUserDto) {
+    return this.mysqlService.transaction(async (connection) => {
+      const queryUserSql = 'SELECT id FROM `users` WHERE uid = ?';
+      Logger.debug(queryUserSql);
+      const [userResult] = await connection.query(queryUserSql, [uid]);
+      const userId = userResult?.[0]?.id;
+      if (!userId) {
+        return new HttpResponse({
+          statusCode: BusinessStatus.FORBIDDEN,
+          message: 'Not found user info',
+        });
+      }
+      const updateSql = 'UPDATE `users` SET ? WHERE id = ?';
+      Logger.debug(updateSql);
+      await connection.query(updateSql, [
+        filterObjectBy(updateUserDto, {
+          excludeKeys: ['uid', 'roles'],
+          before: (value, key) => {
+            if (key === 'birthday') {
+              return new Date(value);
+            }
+            return value;
+          },
+        }),
+        userId,
+      ]);
+      if (updateUserDto.roles) {
+        const clearRelationSql = 'DELETE FROM `_roles_to_users` WHERE B = ?';
+        Logger.debug(clearRelationSql);
+        await connection.query(clearRelationSql, userId);
+        // 插入新关系表
+        const values = updateUserDto.roles.map((rid) => [rid, userId]);
+        if (values.length) {
+          const insertRelationSql = 'INSERT INTO `_roles_to_users` (A, B) VALUES ?';
+          Logger.debug(insertRelationSql);
+          await connection.query(insertRelationSql, [values]);
+        }
+      }
+      return true;
     });
-    sql = sql.slice(0, -1);
-    sql += ' WHERE id = ?';
-    values.push(id);
-    await this.mysqlService.mainPool.query(sql, values);
-    return true;
   }
 
   async remove(uid: string) {
